@@ -43,12 +43,12 @@ jobs:
 
     steps:
       - name: ⤵️ Checkout repository
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.2
 
       - name: ❔ Check Container files changed
         id: file_change
         if: ${{ github.event_name != 'release' && github.event_name != 'workflow_dispatch' }}
-        uses: dorny/paths-filter@v2.11.1
+        uses: dorny/paths-filter@v3.0.2
         with:
           filters: |
             container_folder:
@@ -56,29 +56,29 @@ jobs:
 
       - name: 🏗 Install cosign
         if: ${{ github.event_name != 'pull_request' && steps.file_change.outputs.container_folder != 'false' }}
-        uses: sigstore/cosign-installer@v3.3.0
+        uses: sigstore/cosign-installer@v3.4.0
 
       - name: 🏗 Setup Docker Buildx
         if: ${{ steps.file_change.outputs.container_folder != 'false' }}
-        uses: docker/setup-buildx-action@v3.0.0
+        uses: docker/setup-buildx-action@v3.2.0
 
       - name: 🏗 Cache Docker Layers
         if: ${{ steps.file_change.outputs.container_folder != 'false' }}
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.2
         with:
           path: /tmp/.buildx-cache
           key: container/${{ matrix.name }}
 
       - name: 🏗 Log into docker hub registry
         if: ${{ github.event_name != 'pull_request' && steps.file_change.outputs.container_folder != 'false' }}
-        uses: docker/login-action@v3.0.0
+        uses: docker/login-action@v3.1.0
         with:
           username: ${{env.USER}}
           password: ${{secrets.DOCKER_HUB_TOKEN}}
 
       - name: 🏗 Log into ghcr.io registry
         if: ${{ github.event_name != 'pull_request' && steps.file_change.outputs.container_folder != 'false' }}
-        uses: docker/login-action@v3.0.0
+        uses: docker/login-action@v3.1.0
         with:
           registry: ghcr.io
           username: ${{env.USER}}
@@ -87,7 +87,7 @@ jobs:
       - name: 🏗 Extract metadata
         if: ${{ steps.file_change.outputs.container_folder != 'false' }}
         id: meta
-        uses: docker/metadata-action@v5.5.0
+        uses: docker/metadata-action@v5.5.1
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           images: |
@@ -106,7 +106,7 @@ jobs:
 
       - name: 🚀 Build and export to docekr
         if: ${{ steps.file_change.outputs.container_folder != 'false' }}
-        uses: docker/build-push-action@v5.1.0
+        uses: docker/build-push-action@v5.3.0
         with:
           context: ./${{matrix.context}}
           file: ${{matrix.path}}/Dockerfile
@@ -126,7 +126,7 @@ jobs:
 
       - name: 🚀 Build and publish container image
         if: ${{ steps.file_change.outputs.container_folder != 'false' }}
-        uses: docker/build-push-action@v5.1.0
+        uses: docker/build-push-action@v5.3.0
         with:
           context: ./${{matrix.context}}
           file: ${{matrix.path}}/Dockerfile
